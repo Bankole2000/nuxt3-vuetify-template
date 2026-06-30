@@ -1,9 +1,11 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'blank' })
 
-const { register } = useAuth()
+const { resetPassword } = useAuth()
+const route = useRoute()
 
-const form = ref({ name: '', email: '', password: '', confirmPassword: '' })
+const token = computed(() => route.query.token as string ?? '')
+const form = ref({ password: '', confirmPassword: '' })
 const showPassword = ref(false)
 const showConfirm = ref(false)
 const loading = ref(false)
@@ -11,18 +13,21 @@ const error = ref('')
 
 const rules = {
   required: (v: string) => !!v || 'Required',
-  email: (v: string) => /.+@.+\..+/.test(v) || 'Must be a valid email',
   minLength: (min: number) => (v: string) => v.length >= min || `Minimum ${min} characters`,
   matchPassword: (v: string) => v === form.value.password || 'Passwords do not match',
 }
 
 const submit = async () => {
+  if (!token.value) {
+    error.value = 'Invalid or missing reset token.'
+    return
+  }
   error.value = ''
   loading.value = true
   try {
-    await register(form.value.name, form.value.email, form.value.password)
+    await resetPassword(token.value, form.value.password)
   } catch (e: any) {
-    error.value = e?.data?.message ?? 'Registration failed. Please try again.'
+    error.value = e?.data?.message ?? 'Failed to reset password. The link may have expired.'
   } finally {
     loading.value = false
   }
@@ -32,10 +37,14 @@ const submit = async () => {
 <template>
   <v-card rounded="lg" elevation="4" class="pa-2">
     <v-card-title class="text-h5 font-weight-bold text-center pt-6 pb-2">
-      Create account
+      Reset password
     </v-card-title>
 
     <v-card-text>
+      <p class="text-body-2 text-medium-emphasis text-center mb-6">
+        Enter your new password below.
+      </p>
+
       <v-alert
         v-if="error"
         type="error"
@@ -47,29 +56,8 @@ const submit = async () => {
 
       <v-form @submit.prevent="submit">
         <v-text-field
-          v-model="form.name"
-          label="Full name"
-          autocomplete="name"
-          prepend-inner-icon="mdi-account-outline"
-          :rules="[rules.required]"
-          variant="outlined"
-          class="mb-2"
-        />
-
-        <v-text-field
-          v-model="form.email"
-          label="Email"
-          type="email"
-          autocomplete="email"
-          prepend-inner-icon="mdi-email-outline"
-          :rules="[rules.required, rules.email]"
-          variant="outlined"
-          class="mb-2"
-        />
-
-        <v-text-field
           v-model="form.password"
-          label="Password"
+          label="New password"
           :type="showPassword ? 'text' : 'password'"
           autocomplete="new-password"
           prepend-inner-icon="mdi-lock-outline"
@@ -82,7 +70,7 @@ const submit = async () => {
 
         <v-text-field
           v-model="form.confirmPassword"
-          label="Confirm password"
+          label="Confirm new password"
           :type="showConfirm ? 'text' : 'password'"
           autocomplete="new-password"
           prepend-inner-icon="mdi-lock-check-outline"
@@ -100,15 +88,14 @@ const submit = async () => {
           size="large"
           :loading="loading"
         >
-          Create account
+          Reset password
         </v-btn>
       </v-form>
     </v-card-text>
 
     <v-card-actions class="justify-center pb-6">
-      <span class="text-body-2 text-medium-emphasis">Already have an account?</span>
-      <NuxtLink to="/auth/login" class="text-primary text-body-2 ml-1 font-weight-medium">
-        Sign in
+      <NuxtLink to="/auth/login" class="text-primary text-body-2 font-weight-medium">
+        <v-icon size="16" class="mr-1">mdi-arrow-left</v-icon>Back to sign in
       </NuxtLink>
     </v-card-actions>
   </v-card>

@@ -1,5 +1,3 @@
-<template>
-  <div>
-    <p>Auth index page</p>
-  </div>
-</template>
+<script setup lang="ts">
+await navigateTo('/auth/login', { replace: true })
+</script>
