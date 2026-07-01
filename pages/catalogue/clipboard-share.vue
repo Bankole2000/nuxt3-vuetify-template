@@ -13,7 +13,7 @@ const { share, isSupported, shared } = useShare()
 const toast = useToast()
 
 const snippets = [
-  { label: 'API key', value: 'sk_live_4xR9mK2nQ7vL8pT1wY3uJ6zA0' },
+  { label: 'API key', value: 'your_api_key_here' },
   { label: 'Invite link', value: 'https://app.example.com/invite/abc123xyz' },
   { label: 'Color hex', value: '#1976D2' },
 ]
