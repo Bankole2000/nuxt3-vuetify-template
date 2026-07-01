@@ -10,6 +10,7 @@ interface AuthState {
   user: User | null
   accessToken: string | null
   refreshToken: string | null
+  isRefreshing: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -17,6 +18,7 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     accessToken: null,
     refreshToken: null,
+    isRefreshing: false,
   }),
 
   getters: {
@@ -38,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.accessToken = null
       this.refreshToken = null
+      this.isRefreshing = false
     },
   },
 })

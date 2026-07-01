@@ -6,10 +6,11 @@ JWT-based authentication using Pinia for in-memory state. Tokens are lost on pag
 
 | File | Purpose |
 |------|---------|
-| `stores/auth.ts` | Pinia store — holds `user`, `accessToken`, `refreshToken` |
+| `stores/auth.ts` | Pinia store — holds `user`, `accessToken`, `refreshToken`, `isRefreshing` |
 | `composables/useAuth.ts` | Actions: `login`, `register`, `logout`, `forgotPassword`, `resetPassword` |
 | `composables/useApiFetch.ts` | `$fetch` wrapper that auto-attaches `Authorization: Bearer` header |
-| `middleware/auth.ts` | Route guard — redirects unauthenticated users to `/auth/login` |
+| `plugins/api.ts` | `$fetch` instance with auth headers, 401 refresh logic, and 5xx toast |
+| `middleware/auth.ts` | Route guard — redirects unauthenticated users to `/auth/login?redirect=<path>` |
 | `layouts/blank.vue` | Centered card layout used by all auth pages |
 | `pages/auth/login.vue` | Email + password login form |
 | `pages/auth/register.vue` | Name, email, password, confirm password |
@@ -24,24 +25,42 @@ Copy `.env.example` to `.env` and set your API base URL:
 NUXT_PUBLIC_API_BASE_URL=http://localhost:3001
 ```
 
-This value is exposed via `useRuntimeConfig().public.apiBaseUrl` and used by `useApiFetch`.
-
 ## API Endpoints Expected
-
-The composable calls these endpoints on your backend:
 
 | Method | Path | Body | Response |
 |--------|------|------|----------|
 | `POST` | `/auth/login` | `{ email, password }` | `{ accessToken, refreshToken, user }` |
 | `POST` | `/auth/register` | `{ name, email, password }` | `{ accessToken, refreshToken, user }` |
+| `POST` | `/auth/refresh` | `{ refreshToken }` | `{ accessToken, refreshToken }` |
 | `POST` | `/auth/forgot-password` | `{ email }` | any |
 | `POST` | `/auth/reset-password` | `{ token, password }` | any |
 
 `user` shape: `{ id: string, name: string, email: string }`
 
-## Protecting Routes
+## Token Refresh
 
-Add the `auth` middleware to any page that requires authentication:
+When any API request returns a `401`, `plugins/api.ts` automatically:
+
+1. Calls `POST /auth/refresh` with the stored refresh token
+2. Updates the store with new tokens
+3. Retries the original failed request transparently
+4. If the refresh itself fails → logs the user out and redirects to `/auth/login`
+
+**Concurrent 401 handling:** If multiple requests 401 simultaneously, only one refresh call is fired. The others are queued and replayed once the new token is available — no duplicate refresh calls.
+
+The refresh logic explicitly skips `/auth/refresh` and `/auth/login` URLs to prevent infinite retry loops.
+
+## Redirect After Login
+
+When an unauthenticated user tries to access a protected route, the middleware redirects them to:
+
+```
+/auth/login?redirect=/original/path
+```
+
+After a successful login or register, `useAuth` reads the `?redirect` query param and sends the user back to their intended destination. The redirect is validated to only accept paths starting with `/` to prevent open redirect attacks.
+
+## Protecting Routes
 
 ```vue
 <script setup lang="ts">
@@ -49,16 +68,11 @@ definePageMeta({ middleware: 'auth' })
 </script>
 ```
 
-Unauthenticated users are redirected to `/auth/login?redirect=<original-path>`. The `redirect` query param is preserved for use after login if needed.
-
 ## Making Authenticated API Calls
-
-Use `useApiFetch` instead of `$fetch` directly — it handles the auth header automatically:
 
 ```ts
 const data = await useApiFetch<MyType>('/some/protected/endpoint')
 
-// With options
 const result = await useApiFetch<MyType>('/items', {
   method: 'POST',
   body: { name: 'new item' },
@@ -84,5 +98,6 @@ state: () => ({
   user: useLocalStorage<User | null>('auth:user', null),
   accessToken: useLocalStorage<string | null>('auth:access-token', null),
   refreshToken: useLocalStorage<string | null>('auth:refresh-token', null),
+  isRefreshing: false,
 }),
 ```
