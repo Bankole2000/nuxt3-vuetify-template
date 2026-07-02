@@ -26,6 +26,15 @@ const sections = [
   { title: 'Tag Input', description: 'Chip-based multi-value tag input with Enter/comma delimiters and backspace removal.', to: '/catalogue/tag-input', icon: 'mdi-tag-multiple-outline', color: 'warning' },
   { title: 'Async Autocomplete', description: 'Debounced v-autocomplete wrapper — pass any async fetcher function.', to: '/catalogue/autocomplete', icon: 'mdi-text-search', color: 'error' },
   { title: 'Timeline', description: 'Activity feed, order tracking and release changelog using v-timeline with configurable side and density.', to: '/catalogue/timeline', icon: 'mdi-timeline-outline', color: 'secondary' },
+  { title: 'Link Preview', description: 'Rich URL preview cards in three variants: server-side OG parsing, client-side API, and static prop-driven.', to: '/catalogue/link-preview', icon: 'mdi-link-box-outline', color: 'info' },
+  { title: 'Video Player', description: 'Custom HTML5 player with full controls and a YouTube embed with thumbnail-first loading.', to: '/catalogue/video-player', icon: 'mdi-play-circle-outline', color: 'error' },
+  { title: 'Kanban Board', description: 'Drag cards between columns with priorities, tags and assignees — HTML5 DnD, no packages.', to: '/catalogue/kanban', icon: 'mdi-view-column-outline', color: 'primary' },
+  { title: 'Image Gallery', description: 'Responsive grid with fullscreen lightbox, keyboard navigation and thumbnail strip.', to: '/catalogue/image-gallery', icon: 'mdi-image-multiple-outline', color: 'secondary' },
+  { title: 'Chat / Messaging', description: 'Message bubbles, typing indicator, read receipts and avatar headers. Pair with useSocket.', to: '/catalogue/chat', icon: 'mdi-chat-outline', color: 'success' },
+  { title: 'Pricing Table', description: 'Plan comparison cards with monthly/annual toggle, feature lists and a highlighted featured tier.', to: '/catalogue/pricing', icon: 'mdi-currency-usd', color: 'warning' },
+  { title: 'QR Code', description: 'Client-side QR generation with custom colours, size and error correction — no API needed.', to: '/catalogue/qr-code', icon: 'mdi-qrcode', color: 'info' },
+  { title: 'PDF Viewer', description: 'In-browser PDF rendering with page navigation and zoom using pdfjs-dist.', to: '/catalogue/pdf-viewer', icon: 'mdi-file-pdf-box', color: 'error' },
+  { title: 'Onboarding Tour', description: 'Step-by-step spotlight overlay that highlights any element by CSS selector.', to: '/catalogue/onboarding-tour', icon: 'mdi-compass-outline', color: 'secondary' },
 ]
 </script>
 

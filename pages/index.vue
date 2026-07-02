@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // definePageMeta({ middleware: 'auth' }) // uncomment to protect this page
 
+useSeo({ title: 'Dashboard', description: 'Your application dashboard.' })
+
 const { user } = useAuth()
 const toast = useToast()
 

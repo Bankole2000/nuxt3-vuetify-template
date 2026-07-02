@@ -26,6 +26,15 @@ const sections = [
   { title: 'Tag Input', to: '/catalogue/tag-input', icon: 'mdi-tag-multiple-outline' },
   { title: 'Async Autocomplete', to: '/catalogue/autocomplete', icon: 'mdi-text-search' },
   { title: 'Timeline', to: '/catalogue/timeline', icon: 'mdi-timeline-outline' },
+  { title: 'Link Preview', to: '/catalogue/link-preview', icon: 'mdi-link-box-outline' },
+  { title: 'Video Player', to: '/catalogue/video-player', icon: 'mdi-play-circle-outline' },
+  { title: 'Kanban Board', to: '/catalogue/kanban', icon: 'mdi-view-column-outline' },
+  { title: 'Image Gallery', to: '/catalogue/image-gallery', icon: 'mdi-image-multiple-outline' },
+  { title: 'Chat', to: '/catalogue/chat', icon: 'mdi-chat-outline' },
+  { title: 'Pricing Table', to: '/catalogue/pricing', icon: 'mdi-currency-usd' },
+  { title: 'QR Code', to: '/catalogue/qr-code', icon: 'mdi-qrcode' },
+  { title: 'PDF Viewer', to: '/catalogue/pdf-viewer', icon: 'mdi-file-pdf-box' },
+  { title: 'Onboarding Tour', to: '/catalogue/onboarding-tour', icon: 'mdi-compass-outline' },
 ]
 </script>
 

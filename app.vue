@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { transition } = usePageTransition()
+useApiInterceptor()
 </script>
 
 <template>
