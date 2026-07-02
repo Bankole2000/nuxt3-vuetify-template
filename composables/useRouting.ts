@@ -97,7 +97,7 @@ export const useRouting = () => {
         return null
       }
 
-      const r = data.routes[0]
+      const r = data.routes[0]!
       const steps: RouteStep[] = r.legs.flatMap(leg =>
         leg.steps
           .filter(s => s.maneuver.type !== 'arrive' || leg === r.legs[r.legs.length - 1])

@@ -32,8 +32,8 @@ export const bearing = (a: LatLng, b: LatLng): number => {
 
 /** Cardinal direction label for a bearing */
 export const cardinalDirection = (deg: number): string => {
-  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-  return dirs[Math.round(deg / 45) % 8]
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] as const
+  return dirs[Math.round(deg / 45) % 8]!
 }
 
 /** Format metres as a human-readable string */
@@ -57,22 +57,22 @@ export const optimizeRoute = (
   if (waypoints.length <= 2) {
     const totalDistance =
       waypoints.length === 2
-        ? haversineDistance(waypoints[0], waypoints[1])
+        ? haversineDistance(waypoints[0]!, waypoints[1]!)
         : 0
     return { ordered: [...waypoints], totalDistance }
   }
 
-  const unvisited = waypoints.slice(1) // fix start at index 0
-  const ordered: LatLng[] = [waypoints[0]]
+  const unvisited = waypoints.slice(1)
+  const ordered: LatLng[] = [waypoints[0]!]
   let totalDistance = 0
 
   while (unvisited.length > 0) {
-    const current = ordered[ordered.length - 1]
+    const current = ordered[ordered.length - 1]!
     let nearestIdx = 0
-    let nearestDist = haversineDistance(current, unvisited[0])
+    let nearestDist = haversineDistance(current, unvisited[0]!)
 
     for (let i = 1; i < unvisited.length; i++) {
-      const d = haversineDistance(current, unvisited[i])
+      const d = haversineDistance(current, unvisited[i]!)
       if (d < nearestDist) {
         nearestDist = d
         nearestIdx = i
@@ -80,7 +80,7 @@ export const optimizeRoute = (
     }
 
     totalDistance += nearestDist
-    ordered.push(unvisited[nearestIdx])
+    ordered.push(unvisited[nearestIdx]!)
     unvisited.splice(nearestIdx, 1)
   }
 

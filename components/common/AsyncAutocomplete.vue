@@ -1,6 +1,6 @@
 <script setup lang="ts" >
 const props = withDefaults(defineProps<{
-  modelValue?: unknown
+  modelValue: any
   label?: string
   placeholder?: string
   itemTitle?: string

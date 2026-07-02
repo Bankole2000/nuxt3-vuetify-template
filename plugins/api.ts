@@ -43,8 +43,8 @@ export default defineNuxtPlugin(() => {
 
     onRequest({ options }) {
       if (authStore.accessToken) {
-        const headers = (options.headers as Record<string, string>) ?? {}
-        headers['Authorization'] = `Bearer ${authStore.accessToken}`
+        const headers = new Headers(options.headers as HeadersInit | undefined)
+        headers.set('Authorization', `Bearer ${authStore.accessToken}`)
         options.headers = headers
       }
     },
@@ -78,9 +78,9 @@ export default defineNuxtPlugin(() => {
         }
 
         // Retry the original request with the new token
-        const headers = (options.headers as Record<string, string>) ?? {}
-        headers['Authorization'] = `Bearer ${newToken}`
-        await $fetch(request, { ...options, headers })
+        const headers = new Headers(options.headers as HeadersInit | undefined)
+        headers.set('Authorization', `Bearer ${newToken}`)
+        await $fetch(request, { ...options, headers } as Parameters<typeof $fetch>[1])
         return
       }
 

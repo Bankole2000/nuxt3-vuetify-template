@@ -91,7 +91,7 @@ const releaseEvents = [
   },
 ]
 
-const side = ref<'start' | 'end' | 'alternating'>('alternating')
+const side = ref<'start' | 'end'>('end')
 const dense = ref(false)
 
 const roadmapItems = [

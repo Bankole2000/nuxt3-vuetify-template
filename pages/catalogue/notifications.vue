@@ -19,7 +19,7 @@ const samples = [
 
 const addRandom = () => {
   const s = samples[Math.floor(Math.random() * samples.length)]
-  add(s)
+  if (s) add(s)
 }
 </script>
 

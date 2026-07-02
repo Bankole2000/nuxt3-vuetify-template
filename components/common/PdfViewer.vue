@@ -50,7 +50,7 @@ const loadPdf = async () => {
     // Use CDN worker to avoid bundler issues
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
-    pdfDoc = await pdfjsLib.getDocument(props.src).promise
+    pdfDoc = await pdfjsLib.getDocument({ url: props.src }).promise
     totalPages.value = pdfDoc.numPages
     page.value = Math.min(props.initialPage, totalPages.value)
     await loadPage(page.value)

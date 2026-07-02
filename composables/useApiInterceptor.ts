@@ -8,7 +8,6 @@
 export const useApiInterceptor = () => {
   const router = useRouter()
   const toast = useToast()
-  const { showLoader, hideLoader } = useLoader()
   const authStore = useAuthStore()
 
   const interceptFetch = (fetchFn: typeof $fetch) => {
@@ -18,7 +17,7 @@ export const useApiInterceptor = () => {
           const status = error?.status ?? error?.statusCode
 
           if (status === 401) {
-            authStore.clearTokens()
+            authStore.logout()
             router.push(`/auth/login?redirect=${encodeURIComponent(router.currentRoute.value.fullPath)}`)
             toast.warning('Your session has expired. Please log in again.')
           }

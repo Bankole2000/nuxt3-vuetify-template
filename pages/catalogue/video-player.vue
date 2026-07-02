@@ -142,9 +142,9 @@ const audioCompact = ref(false);
 
       <div :style="ytCompact ? 'max-width: 320px; margin: 0 auto;' : ''">
         <CommonYoutubePlayer
-          :key="selectedYt.id + ytCompact"
-          :src="selectedYt.id"
-          :title="selectedYt.label"
+          :key="(selectedYt?.id ?? '') + ytCompact"
+          :src="selectedYt?.id ?? ''"
+          :title="selectedYt?.label"
           :aspect-ratio="ytCompact ? '9/16' : '16/9'"
           :start="ytStart"
         />

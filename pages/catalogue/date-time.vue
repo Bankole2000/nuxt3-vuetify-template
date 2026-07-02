@@ -15,12 +15,15 @@ const dateMenu = ref(false)
 const timeMenu = ref(false)
 const rangeMenu = ref(false)
 
-const formattedDate = computed(() =>
-  date.value.length ? new Date(date.value[0]).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—',
-)
+const formattedDate = computed(() => {
+  const d = date.value[0]
+  return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'
+})
 const formattedRange = computed(() => {
   if (rangeDate.value.length < 2) return '—'
-  const [a, b] = [...rangeDate.value].sort()
+  const sorted = [...rangeDate.value].sort()
+  const a = sorted[0]!
+  const b = sorted[1]!
   return `${new Date(a).toLocaleDateString()} → ${new Date(b).toLocaleDateString()}`
 })
 </script>

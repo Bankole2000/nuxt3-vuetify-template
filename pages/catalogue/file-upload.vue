@@ -16,7 +16,7 @@ const onPreview = (file: UploadFile) => {
 
 const onConfirm = (dataUrl: string, file: UploadFile) => {
   const existing = confirmedImages.value.findIndex(i => i.name === file.file.name)
-  if (existing !== -1) confirmedImages.value[existing].dataUrl = dataUrl
+  if (existing !== -1) confirmedImages.value[existing]!.dataUrl = dataUrl
   else confirmedImages.value.push({ name: file.file.name, dataUrl })
   toast.success(`Image "${file.file.name}" processed.`)
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Map, TileLayer, Marker, Polyline, CircleMarker } from 'leaflet'
+import type { Map as LeafletMap, Marker, Polyline, CircleMarker } from 'leaflet'
 import type { LatLng } from '~/utils/geo'
 
 export interface MapMarker {
@@ -29,9 +29,8 @@ const emit = defineEmits<{
 }>()
 
 const mapContainer = ref<HTMLDivElement>()
-let map: Map | null = null
-let tileLayer: TileLayer | null = null
-const markerInstances = new Map<string | number, Marker | CircleMarker>()
+let map: LeafletMap | null = null
+const markerInstances = new globalThis.Map<string | number, Marker | CircleMarker>()
 let routePolyline: Polyline | null = null
 let userPulse: CircleMarker | null = null
 
@@ -41,7 +40,7 @@ const initMap = async () => {
   await import('leaflet/dist/leaflet.css')
 
   // Fix default icon path broken by bundlers
-  delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl
+  delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -51,7 +50,7 @@ const initMap = async () => {
   const initialCenter = props.center ?? props.markers[0] ?? { lat: 51.505, lng: -0.09 }
   map = L.map(mapContainer.value).setView([initialCenter.lat, initialCenter.lng], props.zoom)
 
-  tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19,
   }).addTo(map)

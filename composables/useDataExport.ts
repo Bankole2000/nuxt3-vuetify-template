@@ -9,7 +9,7 @@ export const useDataExport = () => {
   }
 
   const exportCSV = (data: Record<string, unknown>[], filename = 'export.csv') => {
-    if (!data.length) return
+    if (!data.length || !data[0]) return
     const headers = Object.keys(data[0])
     const escape = (v: unknown) => {
       const s = v == null ? '' : String(v)

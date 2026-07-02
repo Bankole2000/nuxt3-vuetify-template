@@ -1,5 +1,5 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   url: string
   title?: string
   description?: string
@@ -12,6 +12,11 @@ withDefaults(defineProps<{
 })
 
 const imageError = ref(false)
+
+const hostname = computed(() => {
+  try { return new URL(props.url).hostname }
+  catch { return props.url }
+})
 </script>
 
 <template>
@@ -56,7 +61,7 @@ const imageError = ref(false)
               @error="($event.target as HTMLImageElement).style.display = 'none'"
             >
             <span class="text-caption text-medium-emphasis">
-              {{ siteName ?? new URL(url).hostname }}
+              {{ siteName ?? hostname }}
             </span>
           </div>
 
@@ -80,6 +85,7 @@ const imageError = ref(false)
 .link-preview-desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

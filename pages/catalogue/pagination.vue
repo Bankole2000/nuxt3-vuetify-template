@@ -13,8 +13,8 @@ const ALL_ITEMS: Item[] = Array.from({ length: 87 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
   email: `user${i + 1}@example.com`,
-  role: ['Admin', 'Editor', 'Viewer'][i % 3],
-  status: ['Active', 'Inactive', 'Pending'][i % 3],
+  role: (['Admin', 'Editor', 'Viewer'] as const)[i % 3]!,
+  status: (['Active', 'Inactive', 'Pending'] as const)[i % 3]!,
 }))
 
 const mockFetch = async (page: number, pageSize: number) => {

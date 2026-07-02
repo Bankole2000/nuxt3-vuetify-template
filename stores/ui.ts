@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { SnackbarMessage } from 'vuetify/components/VSnackbarQueue'
+import type { SnackbarQueueMessage as SnackbarMessage } from 'vuetify'
 
 type ToastLocation = 'bottom center' | 'bottom end' | 'bottom start' | 'top center' | 'top end' | 'top start'
 

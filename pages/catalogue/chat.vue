@@ -50,7 +50,7 @@ const onSend = (text: string) => {
     messages.value.push({
       id: mkId(),
       sender: 'other',
-      text: botReplies[Math.floor(Math.random() * botReplies.length)],
+      text: botReplies[Math.floor(Math.random() * botReplies.length)] ?? '',
       timestamp: new Date(),
     })
     // Mark sent as read

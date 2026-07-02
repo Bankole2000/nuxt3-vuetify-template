@@ -39,7 +39,7 @@ const sendMessage = () => {
 // Simulate a server-pushed notification for demo purposes
 const simulateNotification = () => {
   const types = ['success', 'info', 'warning', 'error'] as const
-  const type = types[Math.floor(Math.random() * types.length)]
+  const type = types[Math.floor(Math.random() * types.length)]!
   toast[type](`Server event: sample ${type} notification`)
 }
 

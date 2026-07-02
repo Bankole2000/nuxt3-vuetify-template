@@ -50,7 +50,7 @@ export const useInfiniteScroll = <T>(
   const observe = () => {
     if (!sentinel.value) return
     observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) loadMore() },
+      ([entry]) => { if (entry?.isIntersecting) loadMore() },
       { rootMargin },
     )
     observer.observe(sentinel.value)

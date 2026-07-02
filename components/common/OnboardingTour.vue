@@ -32,7 +32,7 @@ const updatePosition = () => {
   const rect = target.getBoundingClientRect()
   highlight.value = rect
 
-  const placement = current.value.placement ?? 'bottom'
+  const placement = current.value?.placement ?? 'bottom'
   const TOOLTIP_W = 300
   const TOOLTIP_H = 160
 

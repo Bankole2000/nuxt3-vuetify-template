@@ -19,7 +19,7 @@ const open = ref(false)
 const activeIndex = ref(0)
 const imgErrors = ref<Set<number>>(new Set())
 
-const active = computed(() => props.images[activeIndex.value])
+const active = computed(() => props.images[activeIndex.value] as GalleryImage)
 
 const openAt = (i: number) => { activeIndex.value = i; open.value = true }
 const prev = () => { activeIndex.value = (activeIndex.value - 1 + props.images.length) % props.images.length }
