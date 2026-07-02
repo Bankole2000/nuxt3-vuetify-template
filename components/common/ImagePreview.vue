@@ -128,7 +128,6 @@ const onMouseUp = () => { dragging.value = null }
 
 const confirm = () => {
   const canvas = canvasRef.value!
-  const img = imgEl.value!
   const out = document.createElement('canvas')
 
   if (cropMode.value) {

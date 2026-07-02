@@ -2,7 +2,6 @@
 definePageMeta({ layout: 'blank' })
 
 const { login } = useAuth()
-const route = useRoute()
 
 const form = ref<{ email: string; password: string }>({ email: '', password: '' })
 const showPassword = ref(false)
@@ -27,7 +26,6 @@ const submit = async () => {
   }
 }
 
-const redirectPath = computed(() => route.query.redirect as string | undefined)
 </script>
 
 <template>

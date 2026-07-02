@@ -35,7 +35,6 @@ const {
   loading: pageLoading,
   hasNext,
   hasPrev,
-  goToPage,
   nextPage,
   prevPage,
   setPageSize,
@@ -47,7 +46,6 @@ const {
   total: scrollTotal,
   loading: scrollLoading,
   hasMore,
-  sentinel,
   reset,
 } = useInfiniteScroll(mockFetch, { pageSize: 10 })
 

@@ -9,7 +9,7 @@ export const usePageTransition = () => {
 
   const transition = computed(() => {
     if (current.value === 'none') return false
-    return { name: `page-${current.value}`, mode: 'out-in' }
+    return { name: `page-${current.value}`, mode: 'out-in' as const }
   })
 
   return { transition, currentTransition: current, setTransition }

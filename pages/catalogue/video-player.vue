@@ -10,7 +10,6 @@ definePageMeta({
 
 // Native player demos
 const nativeSrc = "/assets/video/landscape/professional.mp4";
-const nativePoster = "";
 
 const playerEvents = ref<string[]>([]);
 const logEvent = (name: string) => {

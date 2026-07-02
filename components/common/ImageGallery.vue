@@ -17,7 +17,6 @@ const props = withDefaults(defineProps<{
 
 const open = ref(false)
 const activeIndex = ref(0)
-const imgErrors = ref<Set<number>>(new Set())
 
 const active = computed(() => props.images[activeIndex.value] as GalleryImage)
 

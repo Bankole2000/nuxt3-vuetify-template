@@ -24,6 +24,30 @@
 - Vuetify composables (`useDisplay`, `useTheme`) need explicit imports: `import { useDisplay } from 'vuetify'`.
 - Change Vuetify theme via `vuetifyTheme.change(name)`, not `vuetifyTheme.global.name.value = name`.
 
+## Preventing lint errors — rules for AI-assisted code generation
+
+### Array index access
+- `noUncheckedIndexedAccess` is effectively active — every `array[i]` is `T | undefined`.
+- Use `!` when the index is guaranteed valid by surrounding logic: `items[0]!`
+- Use a guard variable when the truthiness matters: `const x = arr[i]; if (x) use(x)`
+- Use `as const` on literal arrays so TypeScript knows the exact length: `['a', 'b'] as const`
+
+### Third-party type imports
+- **Never assume a type's export path.** Before writing `import type { Foo } from 'some-pkg/internal/path'`, grep `node_modules` to confirm: `grep -rn "export.*Foo" node_modules/some-pkg/dist --include="*.d.ts"`
+- Prefer top-level imports (`'vuetify'`, `'ofetch'`) over deep paths — internal paths change between versions.
+- Known correct imports for this project:
+  - `import type { SnackbarQueueMessage } from 'vuetify'` (not `SnackbarMessage` from a sub-path)
+  - Fetch API `Headers` class is not indexable — use `new Headers(existing)` + `.set()` instead of casting to `Record<string, string>`
+
+### Vuetify prop types
+- Always verify prop value unions against the installed version before using them.
+- `v-timeline :side` accepts `'start' | 'end'` only — `'alternating'` was removed in Vuetify 4.
+- `useSeoMeta` `ogType` accepts the OG protocol spec values: `'website' | 'article' | 'book' | 'profile' | 'music.song' | 'music.album' | 'music.playlist' | 'music.radio_status' | 'video.movie' | 'video.episode' | 'video.tv_show' | 'video.other'`
+
+### After generating files
+- Run `npx vue-tsc --noEmit` after generating any new file or making significant edits.
+- Fix all errors before moving on — accumulated type errors compound quickly.
+
 ## Slot scope in v-for + Vuetify components
 - Vuetify components that use internal slots (`v-list-item`, `v-card`, `v-chip`) break `v-for` slot scope when item data is passed as props.
 - Fix: use plain HTML + Vuetify utility classes inside the slot instead of Vuetify component props.

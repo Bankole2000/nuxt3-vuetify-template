@@ -32,7 +32,6 @@ const { route, loading: routeLoading, error: routeError, fetchRoute, clearRoute 
 
 const waypoints = ref<(LatLng & { label: string })[]>([])
 const tspEnabled = ref(false)
-const mapRef = ref<{ fitToMarkers: () => void } | null>(null)
 
 const mapMarkers = computed<MapMarker[]>(() => {
   const wps: MapMarker[] = waypoints.value.map((w, i) => ({
