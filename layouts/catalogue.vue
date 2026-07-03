@@ -35,6 +35,11 @@ const sections = [
   { title: 'QR Code', to: '/catalogue/qr-code', icon: 'mdi-qrcode' },
   { title: 'PDF Viewer', to: '/catalogue/pdf-viewer', icon: 'mdi-file-pdf-box' },
   { title: 'Onboarding Tour', to: '/catalogue/onboarding-tour', icon: 'mdi-compass-outline' },
+  { title: 'Signature Pad', to: '/catalogue/signature-pad', icon: 'mdi-draw' },
+  { title: 'OTP / PIN Input', to: '/catalogue/otp-input', icon: 'mdi-numeric' },
+  { title: 'Animated Counter', to: '/catalogue/animated-counter', icon: 'mdi-counter' },
+  { title: 'Data Grid', to: '/catalogue/data-grid', icon: 'mdi-table-edit' },
+  { title: 'Invoice', to: '/catalogue/invoice', icon: 'mdi-file-document-outline' },
 ]
 </script>
 

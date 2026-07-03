@@ -7,7 +7,23 @@ defineProps<{
 defineEmits<{ (e: 'toggle-drawer'): void }>()
 
 const { user, logout } = useAuth()
-const { theme, toggleTheme } = useAppTheme()
+const { theme, stored } = useAppTheme()
+
+const themeIcon = computed(() => {
+  if (stored.value === 'system') return 'mdi-theme-light-dark'
+  return theme.value === 'dark' ? 'mdi-weather-sunny' : 'mdi-weather-night'
+})
+
+const themeTooltip = computed(() => {
+  if (stored.value === 'system') return 'System theme (click for light)'
+  return theme.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+})
+
+const cycleTheme = () => {
+  if (stored.value === 'light') stored.value = 'dark'
+  else if (stored.value === 'dark') stored.value = 'system'
+  else stored.value = 'light'
+}
 </script>
 
 <template>
@@ -30,11 +46,16 @@ const { theme, toggleTheme } = useAppTheme()
         title="Component catalogue"
       />
 
-      <v-btn
-        :icon="theme === 'dark' ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-        variant="text"
-        @click="toggleTheme"
-      />
+      <v-tooltip :text="themeTooltip" location="bottom">
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            v-bind="tooltipProps"
+            :icon="themeIcon"
+            variant="text"
+            @click="cycleTheme"
+          />
+        </template>
+      </v-tooltip>
 
       <v-menu min-width="200" location="bottom end">
         <template #activator="{ props }">

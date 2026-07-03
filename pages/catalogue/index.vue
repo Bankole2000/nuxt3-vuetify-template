@@ -35,6 +35,11 @@ const sections = [
   { title: 'QR Code', description: 'Client-side QR generation with custom colours, size and error correction — no API needed.', to: '/catalogue/qr-code', icon: 'mdi-qrcode', color: 'info' },
   { title: 'PDF Viewer', description: 'In-browser PDF rendering with page navigation and zoom using pdfjs-dist.', to: '/catalogue/pdf-viewer', icon: 'mdi-file-pdf-box', color: 'error' },
   { title: 'Onboarding Tour', description: 'Step-by-step spotlight overlay that highlights any element by CSS selector.', to: '/catalogue/onboarding-tour', icon: 'mdi-compass-outline', color: 'secondary' },
+  { title: 'Signature Pad', description: 'Canvas-based signature capture with configurable stroke colour, width and PNG export.', to: '/catalogue/signature-pad', icon: 'mdi-draw', color: 'primary' },
+  { title: 'OTP / PIN Input', description: 'Digit-by-digit code entry with paste support, keyboard navigation and error state.', to: '/catalogue/otp-input', icon: 'mdi-numeric', color: 'info' },
+  { title: 'Animated Counter', description: 'Counts up to a target value on mount with configurable easing, duration, prefix and suffix.', to: '/catalogue/animated-counter', icon: 'mdi-counter', color: 'success' },
+  { title: 'Data Grid', description: 'Inline-editable table with row selection, column types (text/number/select) and bulk delete.', to: '/catalogue/data-grid', icon: 'mdi-table-edit', color: 'warning' },
+  { title: 'Invoice', description: 'Print-optimised invoice layout with line items, VAT calculation and PDF export via browser print.', to: '/catalogue/invoice', icon: 'mdi-file-document-outline', color: 'secondary' },
 ]
 </script>
 

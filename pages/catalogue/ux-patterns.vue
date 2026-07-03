@@ -25,6 +25,14 @@ const emptyScenarios = [
   { icon: 'mdi-magnify', title: 'No results', message: 'Try adjusting your search or filters to find what you\'re looking for.', color: 'warning', action: 'Clear filters' },
   { icon: 'mdi-folder-open-outline', title: 'No files', message: 'Upload your first file to get started.', color: 'info', action: 'Upload file' },
   { icon: 'mdi-alert-circle-outline', title: 'Something went wrong', message: 'We couldn\'t load your data. Please try again.', color: 'error', action: 'Retry' },
+  { icon: 'mdi-wifi-off', title: 'No connection', message: 'Check your internet connection and try again.', color: 'default', action: 'Retry' },
+  { icon: 'mdi-lock-outline', title: 'Access denied', message: 'You don\'t have permission to view this content.', color: 'error', action: 'Request access' },
+  { icon: 'mdi-cart-outline', title: 'Cart is empty', message: 'Browse our catalogue and add items to get started.', color: 'primary', action: 'Browse products' },
+  { icon: 'mdi-bell-off-outline', title: 'No notifications', message: 'You\'re all caught up! Check back later for updates.', color: 'success', action: null },
+  { icon: 'mdi-history', title: 'No history', message: 'Your activity will appear here once you start using the app.', color: 'info', action: null },
+  { icon: 'mdi-star-outline', title: 'No favourites', message: 'Star items to save them here for quick access.', color: 'warning', action: 'Explore' },
+  { icon: 'mdi-account-group-outline', title: 'No team members', message: 'Invite your colleagues to collaborate on this project.', color: 'primary', action: 'Invite members' },
+  { icon: 'mdi-chart-line', title: 'Not enough data', message: 'Keep using the app and your analytics will appear here.', color: 'info', action: null },
 ]
 
 // Skeletons
@@ -112,15 +120,15 @@ const simulateLoad = async () => {
     <!-- Empty states -->
     <h2 class="text-overline text-medium-emphasis mb-4">Empty states</h2>
     <v-row class="mb-6">
-      <v-col v-for="scenario in emptyScenarios" :key="scenario.title" cols="12" sm="6">
-        <v-card rounded="lg" border>
+      <v-col v-for="scenario in emptyScenarios" :key="scenario.title" cols="12" sm="6" md="4">
+        <v-card rounded="lg" border height="100%">
           <CommonEmptyState
             :icon="scenario.icon"
             :title="scenario.title"
             :message="scenario.message"
             :color="scenario.color"
           >
-            <v-btn :color="scenario.color" variant="tonal" size="small" @click="toast.info(scenario.action)">
+            <v-btn v-if="scenario.action" :color="scenario.color" variant="tonal" size="small" @click="toast.info(scenario.action)">
               {{ scenario.action }}
             </v-btn>
           </CommonEmptyState>

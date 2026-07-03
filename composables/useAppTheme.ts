@@ -1,19 +1,22 @@
 import { useTheme } from 'vuetify'
-import { useLocalStorage } from '@vueuse/core'
+import { useLocalStorage, usePreferredDark } from '@vueuse/core'
+
+const systemPrefersDark = usePreferredDark()
 
 export const useAppTheme = () => {
   const vuetifyTheme = useTheme()
-  const stored = useLocalStorage<'light' | 'dark'>('app:theme', 'light')
+  const stored = useLocalStorage<'light' | 'dark' | 'system'>('app:theme', 'system')
 
-  vuetifyTheme.change(stored.value)
+  const resolved = computed<'light' | 'dark'>(() => {
+    if (stored.value === 'system') return systemPrefersDark.value ? 'dark' : 'light'
+    return stored.value
+  })
 
-  const theme = computed(() => vuetifyTheme.global.current.value.dark ? 'dark' : 'light')
+  watch(resolved, (v) => vuetifyTheme.change(v), { immediate: true })
 
   const toggleTheme = () => {
-    const next = theme.value === 'light' ? 'dark' : 'light'
-    vuetifyTheme.change(next)
-    stored.value = next
+    stored.value = resolved.value === 'light' ? 'dark' : 'light'
   }
 
-  return { theme, toggleTheme }
+  return { theme: resolved, toggleTheme, stored }
 }
