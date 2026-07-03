@@ -50,7 +50,8 @@ const formatted = computed(() =>
   })}${props.suffix}`,
 )
 
-watch(() => props.value, animate, { immediate: true })
+onMounted(() => animate(props.value))
+watch(() => props.value, animate)
 onUnmounted(() => { if (animFrame) cancelAnimationFrame(animFrame) })
 </script>
 

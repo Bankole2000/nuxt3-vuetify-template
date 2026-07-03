@@ -40,6 +40,10 @@ const sections = [
   { title: 'Animated Counter', to: '/catalogue/animated-counter', icon: 'mdi-counter' },
   { title: 'Data Grid', to: '/catalogue/data-grid', icon: 'mdi-table-edit' },
   { title: 'Invoice', to: '/catalogue/invoice', icon: 'mdi-file-document-outline' },
+  { title: 'Charts', to: '/catalogue/charts', icon: 'mdi-chart-line' },
+  { title: 'Workflow Editor', to: '/catalogue/workflow', icon: 'mdi-vector-polyline' },
+  { title: 'Vue Flow', to: '/catalogue/vue-flow', icon: 'mdi-graph-outline' },
+  { title: 'Clock & Timetable', to: '/catalogue/clock', icon: 'mdi-clock-outline' },
 ]
 </script>
 

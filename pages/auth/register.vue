@@ -105,11 +105,17 @@ const submit = async () => {
       </v-form>
     </v-card-text>
 
-    <v-card-actions class="justify-center pb-6">
+    <v-card-actions class="justify-center pb-2">
       <span class="text-body-2 text-medium-emphasis">Already have an account?</span>
       <NuxtLink to="/auth/login" class="text-primary text-body-2 ml-1 font-weight-medium">
         Sign in
       </NuxtLink>
     </v-card-actions>
+    <p class="text-caption text-medium-emphasis text-center pb-5">
+      By registering you agree to our
+      <NuxtLink to="/terms" class="text-primary">Terms</NuxtLink>
+      and
+      <NuxtLink to="/privacy" class="text-primary">Privacy Policy</NuxtLink>.
+    </p>
   </v-card>
 </template>

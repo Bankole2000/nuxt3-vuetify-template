@@ -40,6 +40,10 @@ const sections = [
   { title: 'Animated Counter', description: 'Counts up to a target value on mount with configurable easing, duration, prefix and suffix.', to: '/catalogue/animated-counter', icon: 'mdi-counter', color: 'success' },
   { title: 'Data Grid', description: 'Inline-editable table with row selection, column types (text/number/select) and bulk delete.', to: '/catalogue/data-grid', icon: 'mdi-table-edit', color: 'warning' },
   { title: 'Invoice', description: 'Print-optimised invoice layout with line items, VAT calculation and PDF export via browser print.', to: '/catalogue/invoice', icon: 'mdi-file-document-outline', color: 'secondary' },
+  { title: 'Charts', description: 'Chart.js wrapper covering line, bar, doughnut, pie, radar and live-updating charts with dark mode support.', to: '/catalogue/charts', icon: 'mdi-chart-line', color: 'primary' },
+  { title: 'Workflow Editor', description: 'Node-based visual editor with draggable nodes, bezier edges, pan/zoom canvas, minimap and 8 built-in node types.', to: '/catalogue/workflow', icon: 'mdi-vector-polyline', color: 'indigo' },
+  { title: 'Vue Flow', description: 'Math operation data-flow graph built with @vue-flow/core — custom node types, useNodeConnections and useNodesData composables.', to: '/catalogue/vue-flow', icon: 'mdi-graph-outline', color: 'pink' },
+  { title: 'Clock & Timetable', description: 'SVG analog clock, interactive 24-hour time-wheel planner with draggable arcs, and a drag-and-drop weekly timetable grid.', to: '/catalogue/clock', icon: 'mdi-clock-outline', color: 'teal' },
 ]
 </script>
 
