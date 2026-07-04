@@ -323,7 +323,7 @@ const tspResult = computed(() => {
       <v-row>
         <v-col cols="12" sm="6">
           <p class="text-body-2 font-weight-medium mb-3">Point A</p>
-          <v-row dense>
+          <v-row density="comfortable">
             <v-col cols="6">
               <v-text-field
                 v-model.number="pointA.lat"
@@ -348,7 +348,7 @@ const tspResult = computed(() => {
         </v-col>
         <v-col cols="12" sm="6">
           <p class="text-body-2 font-weight-medium mb-3">Point B</p>
-          <v-row dense>
+          <v-row density="comfortable">
             <v-col cols="6">
               <v-text-field
                 v-model.number="pointB.lat"

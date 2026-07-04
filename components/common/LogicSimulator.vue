@@ -15,7 +15,7 @@ interface SimNode {
   y: number
   ports: Port[]
   state: NodeState
-  inputValue?: boolean  // for INPUT nodes — toggled by user
+  inputValue?: boolean
 }
 
 interface Edge {
@@ -24,13 +24,12 @@ interface Edge {
   fromPort: string
   toNode: string
   toPort: string
-  active: boolean | null  // null = not yet evaluated
+  active: boolean | null
 }
 
 const NODE_W = 120
 const NODE_H = 56
 
-// ─── Node type meta ────────────────────────────────────────────────────────────
 const NODE_META = {
   INPUT:  { label: 'INPUT',  icon: 'mdi-toggle-switch',      color: '#6366f1', inputs: 0, outputs: 1 },
   AND:    { label: 'AND',    icon: 'mdi-gate-and',           color: '#3b82f6', inputs: 2, outputs: 1 },
@@ -55,6 +54,9 @@ const stateColor: Record<NodeState, string> = {
 const nodes = ref<SimNode[]>([])
 const edges = ref<Edge[]>([])
 
+// ─── Selection ────────────────────────────────────────────────────────────────
+const selectedId = ref<string | null>(null)
+
 // ─── Canvas pan/zoom ──────────────────────────────────────────────────────────
 const canvasRef = ref<HTMLDivElement>()
 const pan  = ref({ x: 60, y: 60 })
@@ -66,6 +68,7 @@ let draggingNode: { id: string; ox: number; oy: number; sx: number; sy: number }
 const onCanvasMouseDown = (e: MouseEvent) => {
   if ((e.target as HTMLElement).closest('.ls-node')) return
   panStart = { mx: e.clientX, my: e.clientY, px: pan.value.x, py: pan.value.y }
+  selectedId.value = null
 }
 const onCanvasMouseMove = (e: MouseEvent) => {
   if (panStart) {
@@ -105,6 +108,7 @@ const onNodeMouseDown = (e: MouseEvent, id: string) => {
   e.stopPropagation()
   const n = nodes.value.find(n => n.id === id)!
   draggingNode = { id, ox: n.x, oy: n.y, sx: e.clientX, sy: e.clientY }
+  selectedId.value = id
 }
 
 // ─── Port connection ──────────────────────────────────────────────────────────
@@ -145,7 +149,7 @@ const onPortMouseUp = (nodeId: string, port: Port) => {
 
   const dupe = edges.value.some(e => e.fromNode === fromNode && e.fromPort === fromPort && e.toNode === toNode && e.toPort === toPort)
   if (!dupe) {
-    edges.value.push({ id: `e${edges.value.length}`, fromNode, fromPort, toNode, toPort, active: null })
+    edges.value.push({ id: `e${_uid++}`, fromNode, fromPort, toNode, toPort, active: null })
   }
   connecting.value = null
 }
@@ -195,7 +199,6 @@ const evaluate = (node: SimNode): boolean => {
   }
 }
 
-// Topological sort (Kahn's algorithm)
 const topoSort = (): SimNode[] => {
   const inDeg = new globalThis.Map<string, number>()
   const adj   = new globalThis.Map<string, string[]>()
@@ -246,16 +249,13 @@ const runSim = async () => {
     const outPort = node.ports.find(p => p.type === 'output')
     if (outPort) outPort.value = result
 
-    node.state = result || node.type === 'OUTPUT' ? 'success' : 'success'
+    node.state = 'success'
     if (node.type === 'OUTPUT') {
       node.state = result ? 'success' : 'error'
     }
 
-    // Light up outgoing edges
     for (const e of edges.value) {
-      if (e.fromNode === node.id) {
-        e.active = result
-      }
+      if (e.fromNode === node.id) e.active = result
     }
 
     await sleep(120)
@@ -265,7 +265,7 @@ const runSim = async () => {
   simDone.value = true
 }
 
-// ─── Seed circuit: half-adder ─────────────────────────────────────────────────
+// ─── Node helpers ─────────────────────────────────────────────────────────────
 const makePorts = (type: NodeTypeName): Port[] => {
   const meta = NODE_META[type]
   const ports: Port[] = []
@@ -289,14 +289,55 @@ const connect = (fromIdx: number, fromPort: string, toIdx: number, toPort: strin
   edges.value.push({ id: `e${_uid++}`, fromNode: f.id, fromPort, toNode: t.id, toPort, active: null })
 }
 
-// Toggle INPUT node value
 const toggleInput = (node: SimNode) => {
   if (running.value) return
   node.inputValue = !node.inputValue
   resetSim()
 }
 
-// Current preset
+// ─── Delete selected node + its edges ─────────────────────────────────────────
+const deleteSelected = () => {
+  if (!selectedId.value || running.value) return
+  edges.value = edges.value.filter(e => e.fromNode !== selectedId.value && e.toNode !== selectedId.value)
+  nodes.value = nodes.value.filter(n => n.id !== selectedId.value)
+  selectedId.value = null
+  resetSim()
+}
+
+// ─── Palette drag-to-canvas ───────────────────────────────────────────────────
+const onPaletteDragStart = (e: DragEvent, type: NodeTypeName) => {
+  e.dataTransfer!.setData('application/ls-node', type)
+  e.dataTransfer!.effectAllowed = 'copy'
+}
+
+const onCanvasDragOver = (e: DragEvent) => {
+  if (!e.dataTransfer?.types.includes('application/ls-node')) return
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'copy'
+}
+
+const onCanvasDrop = (e: DragEvent) => {
+  const type = e.dataTransfer?.getData('application/ls-node') as NodeTypeName | undefined
+  if (!type || !(type in NODE_META)) return
+  e.preventDefault()
+  const rect = canvasRef.value!.getBoundingClientRect()
+  const x = (e.clientX - rect.left - pan.value.x) / zoom.value - NODE_W / 2
+  const y = (e.clientY - rect.top  - pan.value.y) / zoom.value - NODE_H / 2
+  const inputValue = type === 'INPUT' ? false : undefined
+  nodes.value.push(mk(type, x, y, inputValue))
+  resetSim()
+}
+
+// ─── Keyboard delete ──────────────────────────────────────────────────────────
+const onKeyDown = (e: KeyboardEvent) => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && (e.target as HTMLElement).tagName !== 'INPUT') {
+    deleteSelected()
+  }
+}
+onMounted(() => window.addEventListener('keydown', onKeyDown))
+onUnmounted(() => window.removeEventListener('keydown', onKeyDown))
+
+// ─── Presets ─────────────────────────────────────────────────────────────────
 type Preset = 'half-adder' | 'sr-latch' | 'majority'
 const preset = ref<Preset>('half-adder')
 
@@ -305,17 +346,17 @@ const loadPreset = (p: Preset) => {
   nodes.value = []
   edges.value = []
   _uid = 0
+  selectedId.value = null
   simDone.value = false
 
   if (p === 'half-adder') {
-    // A, B → XOR (Sum), AND (Carry)
     nodes.value.push(
-      mk('INPUT',  20,  60, true),   // 0: A
-      mk('INPUT',  20, 160, false),  // 1: B
-      mk('XOR',   220,  60),         // 2: Sum
-      mk('AND',   220, 160),         // 3: Carry
-      mk('OUTPUT', 400,  60),        // 4: Sum out
-      mk('OUTPUT', 400, 160),        // 5: Carry out
+      mk('INPUT',  20,  60, true),
+      mk('INPUT',  20, 160, false),
+      mk('XOR',   220,  60),
+      mk('AND',   220, 160),
+      mk('OUTPUT', 400,  60),
+      mk('OUTPUT', 400, 160),
     )
     connect(0, 'out-0', 2, 'in-0')
     connect(0, 'out-0', 3, 'in-0')
@@ -326,56 +367,45 @@ const loadPreset = (p: Preset) => {
   }
 
   if (p === 'majority') {
-    // 3 inputs → majority vote (output true if ≥2 inputs are true)
     nodes.value.push(
-      mk('INPUT',  20,  40, true),   // 0: A
-      mk('INPUT',  20, 140, true),   // 1: B
-      mk('INPUT',  20, 240, false),  // 2: C
-      mk('AND',   200,  40),         // 3: A AND B
-      mk('AND',   200, 140),         // 4: A AND C
-      mk('AND',   200, 240),         // 5: B AND C
-      mk('OR',    380,  90),         // 6: (A∧B) OR (A∧C)
-      mk('OR',    380, 190),         // 7: (B∧C)
-      mk('OR',    560, 140),         // 8: final
-      mk('OUTPUT', 720, 140),        // 9
+      mk('INPUT',  20,  40, true),
+      mk('INPUT',  20, 140, true),
+      mk('INPUT',  20, 240, false),
+      mk('AND',   200,  40),
+      mk('AND',   200, 140),
+      mk('AND',   200, 240),
+      mk('OR',    380,  90),
+      mk('OR',    380, 190),
+      mk('OR',    560, 140),
+      mk('OUTPUT', 720, 140),
     )
-    connect(0, 'out-0', 3, 'in-0')
-    connect(1, 'out-0', 3, 'in-1')
-    connect(0, 'out-0', 4, 'in-0')
-    connect(2, 'out-0', 4, 'in-1')
-    connect(1, 'out-0', 5, 'in-0')
-    connect(2, 'out-0', 5, 'in-1')
-    connect(3, 'out-0', 6, 'in-0')
-    connect(4, 'out-0', 6, 'in-1')
+    connect(0, 'out-0', 3, 'in-0'); connect(1, 'out-0', 3, 'in-1')
+    connect(0, 'out-0', 4, 'in-0'); connect(2, 'out-0', 4, 'in-1')
+    connect(1, 'out-0', 5, 'in-0'); connect(2, 'out-0', 5, 'in-1')
+    connect(3, 'out-0', 6, 'in-0'); connect(4, 'out-0', 6, 'in-1')
     connect(5, 'out-0', 7, 'in-0')
-    connect(6, 'out-0', 8, 'in-0')
-    connect(7, 'out-0', 8, 'in-1')
+    connect(6, 'out-0', 8, 'in-0'); connect(7, 'out-0', 8, 'in-1')
     connect(8, 'out-0', 9, 'in-0')
   }
 
   if (p === 'sr-latch') {
-    // S-R latch using NOR gates
     nodes.value.push(
-      mk('INPUT',  20,  60, false),  // 0: S (Set)
-      mk('INPUT',  20, 200, false),  // 1: R (Reset)
-      mk('NOR',   220,  60),         // 2: Q
-      mk('NOR',   220, 200),         // 3: Q̄
-      mk('OUTPUT', 420,  60),        // 4: Q
-      mk('OUTPUT', 420, 200),        // 5: Q̄
+      mk('INPUT',  20,  60, false),
+      mk('INPUT',  20, 200, false),
+      mk('NOR',   220,  60),
+      mk('NOR',   220, 200),
+      mk('OUTPUT', 420,  60),
+      mk('OUTPUT', 420, 200),
     )
-    connect(0, 'out-0', 2, 'in-0')
-    connect(3, 'out-0', 2, 'in-1')
-    connect(1, 'out-0', 3, 'in-1')
-    connect(2, 'out-0', 3, 'in-0')
-    connect(2, 'out-0', 4, 'in-0')
-    connect(3, 'out-0', 5, 'in-0')
+    connect(0, 'out-0', 2, 'in-0'); connect(3, 'out-0', 2, 'in-1')
+    connect(1, 'out-0', 3, 'in-1'); connect(2, 'out-0', 3, 'in-0')
+    connect(2, 'out-0', 4, 'in-0'); connect(3, 'out-0', 5, 'in-0')
   }
 }
 
 onMounted(() => loadPreset('half-adder'))
 
-// Expose input nodes for display
-const inputNodes = computed(() => nodes.value.filter(n => n.type === 'INPUT'))
+const inputNodes  = computed(() => nodes.value.filter(n => n.type === 'INPUT'))
 const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
 </script>
 
@@ -384,7 +414,7 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
     <!-- Controls bar -->
     <div class="ls-toolbar">
       <div class="d-flex align-center gap-3 flex-wrap">
-        <span class="text-body-2 font-weight-medium">Preset circuit:</span>
+        <span class="text-body-2 font-weight-medium">Preset:</span>
         <v-btn-toggle
           :model-value="preset"
           density="compact"
@@ -400,7 +430,6 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
       </div>
 
       <div class="d-flex align-center gap-2">
-        <!-- Input toggles -->
         <template v-for="(node, i) in inputNodes" :key="node.id">
           <v-chip
             :color="node.inputValue ? 'success' : 'default'"
@@ -417,15 +446,24 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
         <v-divider vertical class="mx-1" style="height:24px" />
 
         <v-btn
+          v-if="selectedId"
+          size="small"
+          variant="tonal"
+          color="error"
+          prepend-icon="mdi-delete-outline"
+          :disabled="running"
+          @click="deleteSelected"
+        >Delete</v-btn>
+
+        <v-btn
           :color="running ? 'warning' : 'success'"
           :prepend-icon="running ? 'mdi-loading mdi-spin' : 'mdi-play'"
           variant="tonal"
           size="small"
           :disabled="running"
           @click="runSim"
-        >
-          {{ running ? 'Running…' : 'Run' }}
-        </v-btn>
+        >{{ running ? 'Running…' : 'Run' }}</v-btn>
+
         <v-btn
           size="small"
           variant="text"
@@ -436,141 +474,163 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
       </div>
     </div>
 
-    <!-- Canvas -->
-    <div
-      ref="canvasRef"
-      class="ls-canvas"
-      @mousedown="onCanvasMouseDown"
-      @mousemove="onCanvasMouseMove"
-      @mouseup="onCanvasMouseUp"
-      @mouseleave="onCanvasMouseUp"
-      @wheel.prevent="onWheel"
-    >
-      <!-- Dot grid -->
-      <svg class="ls-grid" width="100%" height="100%">
-        <defs>
-          <pattern id="ls-dots" :x="pan.x % (20 * zoom)" :y="pan.y % (20 * zoom)" :width="20 * zoom" :height="20 * zoom" patternUnits="userSpaceOnUse">
-            <circle :cx="1 * zoom" :cy="1 * zoom" :r="0.8 * zoom" fill="currentColor" opacity=".15" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#ls-dots)" />
-      </svg>
-
-      <div
-        class="ls-world"
-        :style="{ transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }"
-      >
-        <!-- Edges -->
-        <svg class="ls-edges" overflow="visible">
-          <g v-for="e in resolvedEdges" :key="e!.id">
-            <path
-              :d="e!.path"
-              fill="none"
-              :stroke="e!.active === true ? '#10b981' : e!.active === false ? '#ef4444' : 'currentColor'"
-              :stroke-opacity="e!.active !== null ? 0.9 : 0.25"
-              stroke-width="2.5"
-              :class="{ 'ls-edge-animated': e!.active !== null }"
-              pointer-events="none"
-            />
-          </g>
-          <!-- In-progress -->
-          <path
-            v-if="connecting"
-            :d="bezier(connecting.x1, connecting.y1, connecting.x2, connecting.y2)"
-            fill="none"
-            stroke="rgb(var(--v-theme-primary))"
-            stroke-width="2"
-            stroke-dasharray="5 3"
-            pointer-events="none"
-          />
-        </svg>
-
-        <!-- Nodes -->
+    <!-- Body: palette + canvas -->
+    <div class="ls-body">
+      <!-- Node palette -->
+      <div class="ls-palette">
+        <p class="ls-palette-title">Gates</p>
         <div
-          v-for="node in nodes"
-          :key="node.id"
-          class="ls-node"
-          :class="[`ls-node--${node.state}`]"
-          :style="{
-            left: node.x + 'px',
-            top: node.y + 'px',
-            width: NODE_W + 'px',
-            height: NODE_H + 'px',
-            '--node-color': stateColor[node.state] || NODE_META[node.type].color,
-          }"
-          @mousedown.stop="onNodeMouseDown($event, node.id)"
+          v-for="(meta, type) in NODE_META"
+          :key="type"
+          class="ls-palette-item"
+          draggable="true"
+          @dragstart="onPaletteDragStart($event, type as NodeTypeName)"
         >
-          <!-- Input ports -->
-          <div class="ls-ports ls-ports--left">
-            <div
-              v-for="port in node.ports.filter(p => p.type === 'input')"
-              :key="port.id"
-              class="ls-port"
-              :class="port.value === true ? 'ls-port--on' : port.value === false ? 'ls-port--off' : ''"
-              @mousedown.stop="onPortMouseDown($event, node.id, port)"
-              @mouseup.stop="onPortMouseUp(node.id, port)"
-            />
+          <div class="ls-palette-icon" :style="{ background: meta.color }">
+            <v-icon :icon="meta.icon" size="14" color="white" />
           </div>
-
-          <!-- Body -->
-          <div class="ls-node-body">
-            <div class="ls-node-icon">
-              <v-icon
-                :icon="node.type === 'INPUT'
-                  ? (node.inputValue ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off-outline')
-                  : NODE_META[node.type].icon"
-                size="18"
-                color="white"
-              />
-            </div>
-            <div class="ml-2 overflow-hidden flex-1">
-              <p class="text-caption font-weight-bold text-truncate" style="line-height:1.3;color:white">
-                {{ node.type === 'INPUT' ? (node.inputValue ? '1' : '0') : NODE_META[node.type].label }}
-              </p>
-              <p class="text-caption" style="line-height:1.2;opacity:.75;color:white">
-                {{ node.type === 'INPUT'
-                    ? (node.inputValue ? 'HIGH' : 'LOW')
-                    : node.type === 'OUTPUT'
-                      ? (node.ports.find(p => p.type === 'input')?.value === true ? '→ 1' : node.ports.find(p => p.type === 'input')?.value === false ? '→ 0' : '…')
-                      : node.type }}
-              </p>
-            </div>
-            <!-- State pulse ring -->
-            <div v-if="node.state === 'active'" class="ls-pulse" />
-          </div>
-
-          <!-- Output ports -->
-          <div class="ls-ports ls-ports--right">
-            <div
-              v-for="port in node.ports.filter(p => p.type === 'output')"
-              :key="port.id"
-              class="ls-port ls-port--out"
-              :class="port.value === true ? 'ls-port--on' : port.value === false ? 'ls-port--off' : ''"
-              @mousedown.stop="onPortMouseDown($event, node.id, port)"
-              @mouseup.stop="onPortMouseUp(node.id, port)"
-            />
-          </div>
+          <span class="ls-palette-label">{{ meta.label }}</span>
         </div>
+        <p class="ls-palette-hint">
+          <v-icon icon="mdi-drag" size="11" /> Drag onto canvas<br>
+          Click node to select<br>
+          Delete key to remove
+        </p>
       </div>
 
-      <!-- Result banner -->
-      <transition name="fade">
-        <div v-if="simDone" class="ls-result-bar">
-          <template v-for="(node, i) in outputNodes" :key="node.id">
-            <v-chip
-              :color="node.ports.find(p => p.type === 'input')?.value ? 'success' : 'error'"
-              variant="flat"
-              size="small"
-              class="font-weight-bold"
-            >
-              {{ preset === 'half-adder' ? (i === 0 ? 'Sum' : 'Carry') : preset === 'sr-latch' ? (i === 0 ? 'Q' : 'Q̄') : `Out ${i + 1}` }}
-              = {{ node.ports.find(p => p.type === 'input')?.value ? '1' : '0' }}
-            </v-chip>
-          </template>
-        </div>
-      </transition>
+      <!-- Canvas -->
+      <div
+        ref="canvasRef"
+        class="ls-canvas"
+        @mousedown="onCanvasMouseDown"
+        @mousemove="onCanvasMouseMove"
+        @mouseup="onCanvasMouseUp"
+        @mouseleave="onCanvasMouseUp"
+        @wheel.prevent="onWheel"
+        @dragover="onCanvasDragOver"
+        @drop="onCanvasDrop"
+      >
+        <!-- Dot grid -->
+        <svg class="ls-grid" width="100%" height="100%">
+          <defs>
+            <pattern id="ls-dots" :x="pan.x % (20 * zoom)" :y="pan.y % (20 * zoom)" :width="20 * zoom" :height="20 * zoom" patternUnits="userSpaceOnUse">
+              <circle :cx="1 * zoom" :cy="1 * zoom" :r="0.8 * zoom" fill="currentColor" opacity=".15" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#ls-dots)" />
+        </svg>
 
-      <div class="ls-zoom-badge">{{ Math.round(zoom * 100) }}%</div>
+        <div
+          class="ls-world"
+          :style="{ transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }"
+        >
+          <!-- Edges -->
+          <svg class="ls-edges" overflow="visible">
+            <g v-for="e in resolvedEdges" :key="e!.id">
+              <path
+                :d="e!.path"
+                fill="none"
+                :stroke="e!.active === true ? '#10b981' : e!.active === false ? '#ef4444' : 'currentColor'"
+                :stroke-opacity="e!.active !== null ? 0.9 : 0.25"
+                stroke-width="2.5"
+                :class="{ 'ls-edge-animated': e!.active !== null }"
+                pointer-events="none"
+              />
+            </g>
+            <path
+              v-if="connecting"
+              :d="bezier(connecting.x1, connecting.y1, connecting.x2, connecting.y2)"
+              fill="none"
+              stroke="rgb(var(--v-theme-primary))"
+              stroke-width="2"
+              stroke-dasharray="5 3"
+              pointer-events="none"
+            />
+          </svg>
+
+          <!-- Nodes -->
+          <div
+            v-for="node in nodes"
+            :key="node.id"
+            class="ls-node"
+            :class="[`ls-node--${node.state}`, { 'ls-node--selected': selectedId === node.id }]"
+            :style="{
+              left: node.x + 'px',
+              top: node.y + 'px',
+              width: NODE_W + 'px',
+              height: NODE_H + 'px',
+              '--node-color': stateColor[node.state] || NODE_META[node.type].color,
+            }"
+            @mousedown.stop="onNodeMouseDown($event, node.id)"
+          >
+            <div class="ls-ports ls-ports--left">
+              <div
+                v-for="port in node.ports.filter(p => p.type === 'input')"
+                :key="port.id"
+                class="ls-port"
+                :class="port.value === true ? 'ls-port--on' : port.value === false ? 'ls-port--off' : ''"
+                @mousedown.stop="onPortMouseDown($event, node.id, port)"
+                @mouseup.stop="onPortMouseUp(node.id, port)"
+              />
+            </div>
+
+            <div class="ls-node-body">
+              <div class="ls-node-icon">
+                <v-icon
+                  :icon="node.type === 'INPUT'
+                    ? (node.inputValue ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off-outline')
+                    : NODE_META[node.type].icon"
+                  size="18"
+                  color="white"
+                />
+              </div>
+              <div class="ml-2 overflow-hidden flex-1">
+                <p class="text-caption font-weight-bold text-truncate" style="line-height:1.3;color:white">
+                  {{ node.type === 'INPUT' ? (node.inputValue ? '1' : '0') : NODE_META[node.type].label }}
+                </p>
+                <p class="text-caption" style="line-height:1.2;opacity:.75;color:white">
+                  {{ node.type === 'INPUT'
+                      ? (node.inputValue ? 'HIGH' : 'LOW')
+                      : node.type === 'OUTPUT'
+                        ? (node.ports.find(p => p.type === 'input')?.value === true ? '→ 1' : node.ports.find(p => p.type === 'input')?.value === false ? '→ 0' : '…')
+                        : node.type }}
+                </p>
+              </div>
+              <div v-if="node.state === 'active'" class="ls-pulse" />
+            </div>
+
+            <div class="ls-ports ls-ports--right">
+              <div
+                v-for="port in node.ports.filter(p => p.type === 'output')"
+                :key="port.id"
+                class="ls-port ls-port--out"
+                :class="port.value === true ? 'ls-port--on' : port.value === false ? 'ls-port--off' : ''"
+                @mousedown.stop="onPortMouseDown($event, node.id, port)"
+                @mouseup.stop="onPortMouseUp(node.id, port)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Result banner -->
+        <transition name="fade">
+          <div v-if="simDone" class="ls-result-bar">
+            <template v-for="(node, i) in outputNodes" :key="node.id">
+              <v-chip
+                :color="node.ports.find(p => p.type === 'input')?.value ? 'success' : 'error'"
+                variant="flat"
+                size="small"
+                class="font-weight-bold"
+              >
+                {{ preset === 'half-adder' ? (i === 0 ? 'Sum' : 'Carry') : preset === 'sr-latch' ? (i === 0 ? 'Q' : 'Q̄') : `Out ${i + 1}` }}
+                = {{ node.ports.find(p => p.type === 'input')?.value ? '1' : '0' }}
+              </v-chip>
+            </template>
+          </div>
+        </transition>
+
+        <div class="ls-zoom-badge">{{ Math.round(zoom * 100) }}%</div>
+      </div>
     </div>
   </div>
 </template>
@@ -594,10 +654,67 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
+/* Body */
+.ls-body {
+  display: flex;
+  height: 380px;
+}
+
+/* Palette */
+.ls-palette {
+  width: 112px;
+  flex-shrink: 0;
+  padding: 10px 8px;
+  background: rgb(var(--v-theme-surface));
+  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ls-palette-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(var(--v-theme-on-surface), .38);
+  margin-bottom: 4px;
+}
+.ls-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  cursor: grab;
+  transition: background .1s;
+}
+.ls-palette-item:hover { background: rgba(var(--v-theme-on-surface), .06); }
+.ls-palette-icon {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ls-palette-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(var(--v-theme-on-surface), .7);
+}
+.ls-palette-hint {
+  font-size: 9px;
+  line-height: 1.7;
+  color: rgba(var(--v-theme-on-surface), .32);
+  margin-top: auto;
+  padding-top: 8px;
+}
+
 /* Canvas */
 .ls-canvas {
   position: relative;
-  height: 360px;
+  flex: 1;
   overflow: hidden;
   background: rgb(var(--v-theme-surface-variant));
   cursor: grab;
@@ -639,6 +756,7 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
   transition: box-shadow .2s, transform .1s;
 }
 .ls-node:hover { box-shadow: 0 4px 16px rgba(0,0,0,.28); }
+.ls-node--selected { box-shadow: 0 0 0 3px white, 0 0 0 5px var(--node-color); }
 .ls-node--active {
   box-shadow: 0 0 0 3px #f59e0b, 0 4px 20px rgba(245,158,11,.4);
   transform: scale(1.03);
@@ -690,7 +808,6 @@ const outputNodes = computed(() => nodes.value.filter(n => n.type === 'OUTPUT'))
 .ls-port--off { background: #ef4444; border-color: #ef4444; }
 .ls-port:hover { transform: scale(1.3); }
 
-/* Pulse ring for active node */
 .ls-pulse {
   position: absolute;
   inset: -4px;

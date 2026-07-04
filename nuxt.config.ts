@@ -4,7 +4,7 @@ import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  modules: ["@pinia/nuxt", "@vueuse/nuxt", "@vite-pwa/nuxt"],
+  modules: ["@pinia/nuxt", "@vueuse/nuxt", "@vite-pwa/nuxt", "@tresjs/nuxt"],
 
   runtimeConfig: {
     public: {

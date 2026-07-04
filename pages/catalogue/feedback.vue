@@ -3,7 +3,7 @@ definePageMeta({ layout: 'catalogue' })
 
 const toast = useToast()
 const { confirm } = useConfirm()
-const loader = useLoader()
+const loader = useLoadingState()
 
 type ToastLocation = 'bottom center' | 'bottom end' | 'bottom start' | 'top center' | 'top end' | 'top start'
 

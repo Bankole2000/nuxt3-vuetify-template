@@ -204,9 +204,17 @@ const addBlock = (ring: Ring) => {
   const list = ring === 'am' ? amBlocks : pmBlocks
   const used = list.value.reduce((a, b) => a + (b.endMin - b.startMin), 0)
   if (used >= 720) return
-  const start = list.value[list.value.length - 1]?.endMin ?? 0
-  const end = Math.min(720, start + 60)
-  list.value.push({ id: `${ring}${Date.now()}`, label: newLabel.value || 'Block', color: newColor.value, startMin: start, endMin: end })
+
+  const MIN_SPAN = snap.value
+  const sorted   = [...list.value].sort((a, b) => a.startMin - b.startMin)
+  let gapStart   = 0
+  for (const b of sorted) {
+    if (b.startMin - gapStart >= MIN_SPAN) break
+    gapStart = b.endMin
+  }
+  const end = Math.min(720, gapStart + 60)
+  list.value.push({ id: `${ring}${Date.now()}`, label: newLabel.value || 'Block', color: newColor.value, startMin: gapStart, endMin: end })
+  list.value.sort((a, b) => a.startMin - b.startMin)
   newLabel.value = ''
 }
 

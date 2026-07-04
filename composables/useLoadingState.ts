@@ -1,6 +1,6 @@
 import { useUiStore } from '~/stores/ui'
 
-export const useLoader = () => {
+export const useLoadingState = () => {
   const ui = useUiStore()
   return {
     start: ui.startLoading.bind(ui),
